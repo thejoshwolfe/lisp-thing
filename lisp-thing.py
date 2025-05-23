@@ -50,7 +50,7 @@ def parse_value(token_str):
 
     if token_str[0] == '"':
         try:
-            return json.loads(token_str)
+            return String(json.loads(token_str))
         except json.JSONDecodeError as e:
             raise ParseError(e) from None
     # Identifier
@@ -69,6 +69,11 @@ class Integer(Value):
         self.n = n
     def __repr__(self):
         return repr(self.n)
+class String(Value):
+    def __init__(self, s):
+        self.s = s
+    def __repr__(self):
+        return json.dumps(self.s)
 
 if __name__ == "__main__":
     main()
