@@ -6,11 +6,18 @@ import re, json
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("file")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("file", nargs="?")
+    group.add_argument("-c", "--command", help=
+        "the literal code of the program, not read from a file.")
     args = parser.parse_args()
 
-    with open(args.file) as f:
-        contents = f.read()
+    if args.file != None:
+        with open(args.file) as f:
+            contents = f.read()
+    elif args.command != None:
+        contents = args.command
+    else: assert False
     print(repr(parse(contents)))
 
 token_re = re.compile(r''
