@@ -18,14 +18,18 @@ def main():
     elif args.command != None:
         contents = args.command
     else: assert False
-    print(repr(parse(contents)))
+
+    tree = parse(contents)
+    #print(repr(tree))
+
+    print(eval_tuple(tree))
 
 token_re = re.compile(r''
-    r'\s+|'
+    r'\s+|' # Whitespace.
     r'\(|'
     r'\)|'
-    r'"(?:[^"\n\\]|\\.)+"|' # roughly json strings.
-    r'[^()\s]+'
+    r'"(?:[^"\n\\]|\\.)+"|' # Literally json strings.
+    r'[^()\s]+' # Integers, identifiers, and anything else unrecognized.
     # We do NOT set re.DOTALL, because we don't want string literals to go past newline boundaries.
 )
 def parse(contents):
@@ -64,6 +68,7 @@ def parse_value(token_str):
     return Identifier(token_str)
 
 class ParseError(Exception): pass
+class RuntimeError(Exception): pass
 
 class Value: pass
 class Identifier(Value):
@@ -81,6 +86,32 @@ class String(Value):
         self.s = s
     def __repr__(self):
         return json.dumps(self.s)
+
+def eval_tuple(tree):
+    assert type(tree) == list
+    if len(tree) == 0: raise RuntimeError("empty list")
+
+    function_id = tree[0]
+    if type(function_id) != Identifier: raise RuntimeError("cannot invoke a " + str(type(function_id)))
+
+    fn = builtin_functions[function_id.name]
+
+    args = [eval_expr(arg_tree) for arg_tree in tree[1:]]
+    return fn(*args)
+
+def eval_expr(value):
+    if type(value) == list:
+        return eval_tuple(value)
+    elif type(value) == Identifier: raise RuntimeError("cannot eval an identifier: " + value.name)
+    elif type(value) == Integer:
+        return value.n
+    elif type(value) == String:
+        return value.s
+    else: assert False
+
+builtin_functions = {
+    "+": (lambda *args: sum(args)),
+}
 
 if __name__ == "__main__":
     main()
