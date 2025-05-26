@@ -70,18 +70,18 @@ def parse_value(token_str):
 class ParseError(Exception): pass
 class RuntimeError(Exception): pass
 
-class Value: pass
-class Identifier(Value):
+class Expr: pass
+class Identifier(Expr):
     def __init__(self, name):
         self.name = name
     def __repr__(self):
         return "id:" + self.name
-class Integer(Value):
+class Integer(Expr):
     def __init__(self, n):
         self.n = n
     def __repr__(self):
         return repr(self.n)
-class String(Value):
+class String(Expr):
     def __init__(self, s):
         self.s = s
     def __repr__(self):
@@ -99,18 +99,20 @@ def eval_tuple(tree):
     args = [eval_expr(arg_tree) for arg_tree in tree[1:]]
     return fn(*args)
 
-def eval_expr(value):
-    if type(value) == list:
-        return eval_tuple(value)
-    elif type(value) == Identifier: raise RuntimeError("cannot eval an identifier: " + value.name)
-    elif type(value) == Integer:
-        return value.n
-    elif type(value) == String:
-        return value.s
+def eval_expr(expr):
+    if type(expr) == list:
+        return eval_tuple(expr)
+    elif type(expr) == Identifier: raise RuntimeError("cannot eval an identifier: " + expr.name)
+    elif type(expr) == Integer:
+        return expr.n
+    elif type(expr) == String:
+        return expr.s
     else: assert False
 
 builtin_functions = {
     "+": (lambda *args: sum(args)),
+    "list": (lambda *args: list(args)),
+    "first": (lambda l: l[0]),
 }
 
 if __name__ == "__main__":
